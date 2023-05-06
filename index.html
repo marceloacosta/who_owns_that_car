@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>License Plate Scanner</title>
+    <style>
+      /* Add CSS styles here */
+    </style>
+  </head>
+  <body>
+    <h1>License Plate Scanner</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" hidden></canvas>
+    <button id="scan">Scan License Plate</button>
+    <p id="result"></p>
+
+    <!-- Add the necessary JavaScript libraries -->
+    <script src="https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js"></script>
+    <script>
+      const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const scanButton = document.getElementById("scan");
+const result = document.getElementById("result");
+
+navigator.mediaDevices
+  .getUserMedia({ video: true, audio: false })
+  .then(function (stream) {
+    video.srcObject = stream;
+  })
+  .catch(function (err) {
+    console.error("An error occurred: " + err);
+  });
+
+scanButton.addEventListener("click", function () {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  Tesseract.recognize(canvas, { lang: "eng" }).then(function ({ data }) {
+    const licensePlate = data.text.trim(); // Extracted license plate number
+    getCarOwnerName(licensePlate).then(function (ownerName) {
+      result.innerHTML = `License Plate: ${licensePlate}<br>Owner: ${ownerName}`;
+    });
+  });
+});
+
+async function getCarOwnerName(licensePlate) {
+  const apiUrl = "YOUR_API_URL_HERE";
+  const apiKey = "YOUR_API_KEY_HERE";
+
+  const response = await fetch(
+    `${apiUrl}?licensePlate=${licensePlate}&apiKey=${apiKey}`
+  );
+
+  if (response.ok) {
+    const data = await response.json();
+    return data.ownerName;
+  } else {
+    throw new Error("Failed to load car owner name");
+  }
+}
+
+    </script>
+  </body>
+</html>
